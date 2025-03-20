@@ -1,13 +1,13 @@
 import React from 'react'
 import { useState } from 'react';
 import {Link ,useNavigate} from 'react-router-dom'
-
+import { signInStart,signInSuccess,signInFailure} from '../redux/user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
 export default function SignIn() {
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(null);
+  const {loading,error}=useSelector((state)=>state.user);
   const navigate=useNavigate();
-
+  const dispatch=useDispatch();
   const handleChanges = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -16,8 +16,7 @@ export default function SignIn() {
     e.preventDefault(); // Prevents the page from refreshing on submit
 
     try {
-      setLoading(true);
-      setError(false); // Reset error state before making request
+      dispatch(signInStart())
 
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
@@ -29,18 +28,16 @@ export default function SignIn() {
 
       const data = await res.json(); // <- Moved this line outside of fetch()
     
-      setLoading(false);
-      console.log(data); // Log response to check data
+      
       if(data.success===false){
-        setError(true);
+        dispatch(signInFailure(data.message || "Sign-in failed"));
         return;
       }
+      dispatch(signInSuccess(data));
       navigate('/')
 
     } catch (error) {
-      setLoading(false);
-      setError(true);
-      console.error("Signup error:", error); // Log error for debugging
+      dispatch(signInFailure(error));
     }
   };
 
@@ -65,7 +62,7 @@ export default function SignIn() {
      
      </div>
      <div>
-      <p className='text-red-700 mt-5'>{error && "Something went wrong!!"}</p>
+      <p className='text-red-700 mt-5'>{error ? error.mesasge || "Network Error: Please check your connection!!":''}</p>
      </div>
     </div>
   )
