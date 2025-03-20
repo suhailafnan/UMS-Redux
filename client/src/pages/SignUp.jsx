@@ -1,12 +1,12 @@
 import React from 'react'
 import { useState } from 'react';
-import {Link} from 'react-router-dom'
+import {Link ,useNavigate } from 'react-router-dom'
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(null);
-
+ const  navigate= useNavigate()
   const handleChanges = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -34,6 +34,7 @@ export default function SignUp() {
         setError(true);
         return;
       }
+      navigate('/sign-in');
 
     } catch (error) {
       setLoading(false);
@@ -52,7 +53,7 @@ export default function SignUp() {
        <input type="email" placeholder='Email' id='email' className='bg-slate-100 p-3 rounded-lg'onChange={handleChanges} />
        <input type="password" placeholder='Password' id='password' className='bg-slate-100 p-3 rounded-lg' onChange={handleChanges} />
        <button type="submit"  disabled={loading}className=' bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80 '>
-        {loading?'Loading...':'Sign In'}</button>
+        {loading?'Loading...':'Sign Up'}</button>
      </form>
 
      <div className="flex gap-2 mt-5">
