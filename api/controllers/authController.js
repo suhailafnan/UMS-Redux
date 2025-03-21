@@ -124,3 +124,8 @@ export const signin = async (req, res, next) => {
       next(error);
     }
   };
+  // signout
+
+  export const signout = async (req, res, next) => {
+    res.clearCookie('access_token').status(200).json('Signout Success!')
+  };
