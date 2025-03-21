@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState , useEffect} from "react";
 import { useSelector } from "react-redux";
-import axios from "axios";
+
 import { useDispatch } from "react-redux";
 import {
   deleteUserFailure,
@@ -13,62 +13,50 @@ import {
 } from "../redux/user/userSlice";
 
 export default function Profile() {
-  const fileRef = useRef(null);
-  const { currentUser, loading, error } = useSelector((state) => state.user);
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(currentUser?.profilePicture || "");
+  const dispatch = useDispatch()
+  const { currentUser } = useSelector((state) => state.user);
+  const fileRef = useRef(null); 
+  const [image, setImage] = useState(undefined);
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false); // Loading state added
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  const dispatch = useDispatch();
-  // Handle File Selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file)); // Show preview before uploading
-      uploadImage(file);
-    }
-  };
 
-  // Secure Cloudinary Upload
-  const uploadImage = async (file) => {
+  useEffect(() => {
+    if (image) {
+      handleFileUpload(image);
+    }
+  }, [image]);
+
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    setLoading(true);
+  
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", "First_time_using");
+    data.append("cloud_name", "ddsvu2b3o");
+  
     try {
-      // Step 1: Get Signature from Backend
-      const { data } = await axios.post(
-        "http://localhost:3000/api/cloudinary-signature"
-      );
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY); // ✅ Use env variable
-      formData.append("timestamp", data.timestamp);
-      formData.append("signature", data.signature);
-      formData.append("folder", "profile_pictures"); // Optional: Store in a folder
-
-      // Step 2: Upload to Cloudinary
-      const response = await axios.post(
+      const res = await fetch(
         "https://api.cloudinary.com/v1_1/dds9jpkcg/image/upload",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } } // ✅ Add headers
+        {
+          method: "POST",
+          body: data,
+        }
       );
-
-      const imageUrl = response.data.secure_url;
-      setPreview(imageUrl);
-      alert("✅ Image uploaded successfully!");
-
-      // Step 3: Update Backend with Image URL
-      await axios.put("http://localhost:3000/api/user/update-profile", {
-        userId: currentUser._id,
-        profilePicture: imageUrl,
-      });
+      const uploadedImageData = await res.json();
+      console.log(uploadedImageData.url, "handleUpload");
+  
+      // Update formData with the new profile picture URL
+      setFormData((prev) => ({ ...prev, profilePicture: uploadedImageData.url }));
+  
     } catch (error) {
-      console.error(
-        "❌ Upload failed:",
-        error.response?.data?.error?.message || error
-      );
-      alert("❌ Failed to upload image.");
+      console.error("Upload failed", error);
+    } finally {
+      setLoading(false);
     }
   };
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -127,21 +115,22 @@ export default function Profile() {
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {/* Hidden File Input */}
         <input
-          type="file"
-          ref={fileRef}
-          hidden
-          accept="image/*"
-          onChange={handleFileChange}
-        />
+            type="file"
+            ref={fileRef}
+            hidden
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
 
         {/* Profile Image */}
+        <div className="relative self-center">
         <img
-          src={preview}
-          alt="profile"
-          className="h-24 w-24 self-center cursor-pointer rounded-full object-cover mt-2"
-          onClick={() => fileRef.current.click()}
-        />
-
+              className="h-24 w-24 cursor-pointer rounded-full object-cover mt-2"
+              src={currentUser.profilePicture}
+              alt=""
+              onClick={() => fileRef.current.click()}
+            />
+          </div>
         <input
           defaultValue={currentUser.username}
           type="text"
@@ -179,7 +168,7 @@ export default function Profile() {
         <span onClick={handleSignOut}className="text-red-700 cursor-pointer">Sign Out</span>
       </div>
       <div>
-        <p className="text-red-700 mt-5">{error && "Something went wrong!!"}</p>
+        {/* <p className="text-red-700 mt-5">{error && "Something went wrong!!"}</p> */}
         <p className="text-green-700 mt-5">
           {updateSuccess && "User is updated!!"}
         </p>
