@@ -52,6 +52,21 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    updateProfilePictureStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    updateProfilePictureSuccess: (state, action) => {
+      if (state.currentUser) {
+        state.currentUser.profilePicture = action.payload; // ✅ Update profile picture
+      }
+      state.loading = false;
+      state.error = null;
+    },
+    updateProfilePictureFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload; // ✅ Store error message
+    },
   },
 });
 
@@ -66,5 +81,8 @@ export const {
   deleteUserSuccess,
   deleteUserStart,
   signOut,
+  updateProfilePictureStart,
+  updateProfilePictureSuccess,
+  updateProfilePictureFailure,
 } = userSlice.actions;
 export default userSlice.reducer;

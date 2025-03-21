@@ -14,27 +14,42 @@ export const updateUser = async (req, res, next) => {
 
   try {
     const updateFields = {};
+
+    // ✅ Update username, email, and password securely
     if (req.body.username) updateFields.username = req.body.username;
     if (req.body.email) updateFields.email = req.body.email;
     if (req.body.password) {
       updateFields.password = bcryptjs.hashSync(req.body.password, 10);
     }
-    if (req.body.profilePicture) updateFields.profilePicture = req.body.profilePicture; // ✅ Ensure profile picture updates
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateFields }, { new: true });
+    // ✅ Ensure profile picture updates if provided
+    if (req.body.profilePicture) {
+      console.log("Received Profile Picture:", req.body.profilePicture);
+      updateFields.profilePicture = req.body.profilePicture;
+    }
+
+    // ✅ Update user in MongoDB
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true }
+    );
 
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
+    console.log("Updated User:", updatedUser);
+
+    // ✅ Exclude password before sending response
     const { password, ...rest } = updatedUser._doc;
     res.status(200).json(rest);
-
   } catch (error) {
-    console.error(error);
+    console.error("Update Error:", error);
     next(errorHandling(500, "Something went wrong"));
   }
 };
+
 
 export const deleteUser = async (req,res,next)=>{
   if(req.params.id !== req.user.id){
