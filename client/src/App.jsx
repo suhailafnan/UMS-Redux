@@ -22,7 +22,7 @@ const App = () => {
         <Route path="/admin/sign-in" element={<AdminSignIn />} />
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
-          {/* Admin-Protected Routes */}
+          
           <Route element={<AdminPrivateRoute />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Route>

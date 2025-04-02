@@ -28,6 +28,7 @@ export const updateUser = async (req, res, next) => {
       updateFields.profilePicture = req.body.profilePicture;
     }
 
+    
     // ✅ Update user in MongoDB
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
